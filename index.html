@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="shortcut icon" type="image/png" href="favicon.jpg">
+    
+	<link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="./css/animate.css">
+	<link rel="stylesheet" type="text/css" href="./css/font-awesome.min.css">
+	<link href='https://fonts.googleapis.com/css?family=Oleo+Script&display=swap&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+    <title>Home</title>
+
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
+<script>
+function FirebaseInit() {
+Ma 
+    var config = {
+
+        apiKey: "AIzaSyBPLh_AtHpeTWt9HD7YLisBtqIffZh4-7Y",
+
+        authDomain: "giordanoi.firebaseapp.com",
+
+        databaseURL: "https://giordanoi.firebaseio.com",
+
+        projectId: "giordanoi",
+
+        storageBucket: "",
+
+        messagingSenderId: "159789355463",
+
+        appId: "1:159789355463:web:9fea5333f7b7c92cd209e2"
+
+    };
+
+    firebase.initializeApp(config);
+
+}
+
+
+
+function partecipo() {
+
+    let c = $('#code').val().trim().toLowerCase();
+
+    for (const element of $('#data').children()) {
+
+        let n = element.children[0].innerHTML;
+
+        let p = element.children[1].getElementsByClassName('active')[0].getElementsByTagName('span')[0].innerHTML;
+
+        let v = element.children[2].getElementsByClassName('active')[0].getElementsByTagName('span')[0].innerHTML;
+
+        let i = element.children[3].getElementsByTagName('input')[0].value;
+
+        scroll(0, 0);
+
+        WriteIntoDB(c, n, p, v, i);
+
+    }
+
+    EmptySection();
+
+}
+
+
+
+function WriteIntoDB(codice, nome, partecipa, menu_vegetariano, intolleranze) {
+
+    firebase.database()
+
+        .ref('conferme')
+
+        .child(codice)
+
+        .child(nome)
+
+        .set({
+
+            'codice': codice,
+
+            'nome': nome,
+
+            'partecipa': partecipa,
+
+            'menu_vegetariano': menu_vegetariano,
+
+            'intolleranze': intolleranze
+
+        });
+
+}
+
+
+
+function login() {
+
+    EmptySection();
+
+    let code = $('#code').val().trim().toLowerCase();
+
+    if (code === '')
+
+        GenerateError();
+
+
+
+    if (code === 'data_bd')
+
+        RetrieveDataFromDB();
+
+    else
+
+        firebase.database().ref('codici').child(code).once("value")
+
+        .then(snap => {
+
+            let val = snap.val();
+
+            console.log(val);
+
+            if (!!val) {
+
+                document.getElementById('form').hidden = false;
+
+                document.getElementById('data-header').hidden = false;
+
+                GenerateRows(code, val);
+
+            } else {
+
+                GenerateError();
+
+            }
+
+        });
+
+}
+
+
+
+function EmptySection() {
+
+    document.getElementById('data').innerHTML = '';
+
+    document.getElementById('data-header').hidden = true;
+
+    document.getElementById('form').hidden = true;
+
+}
+
+
+
+function GenerateRows(familyCode, familyMembers) {
+
+    for (let m = 0; m < familyMembers.length; m++) {
+
+        const member = familyMembers[m];
+
+        let html = `
+
+  <div class="row">
+
+    <div class="col-md-3 text-center line-center">` + member + `</div>
+
+    <div class="col-md-3 text-center line-center">
+
+      <div class="btn-group btn-group-toggle" data-toggle="buttons">
+
+        <label class="btn btn-secondary active"> <input type="radio" name="` + familyCode + `_` + member + `_partecipo" autocomplete="off" checked><span> SI</span></label>
+
+        <label class="btn btn-secondary"> <input type="radio" name="` + familyCode + `_` + member + `_partecipo" autocomplete="off"><span> NO</span></label>
+
+      </div>
+
+    </div>
+
+    <div class="col-md-3 text-center line-center">
+
+      <div class="btn-group btn-group-toggle" data-toggle="buttons">
+
+        <label class="btn btn-secondary"> <input type="radio" name="` + familyCode + `_` + member + `_vegetariano" autocomplete="off"><span> SI</span></label>
+
+        <label class="btn btn-secondary active"> <input type="radio" name="` + familyCode + `_` + member + `_vegetariano" autocomplete="off" checked><span> NO</span></label>
+
+      </div>
+
+    </div>
+
+    <div class="col-md-3 text-center line-center">
+
+        <input type="text" class="form-control" id="` + familyCode + `_` + member + `_intolleranze" placeholder="" value="" />
+
+    </div>
+
+  </div>
+
+  `
+
+        document.getElementById('data').innerHTML += html;
+
+    }
+
+    document.getElementById('data').innerHTML += '<br/><div class="row" style="justify-content: flex-end;"><strong>*</strong>&nbsp;Menu bambino, intolleranze, altro&hellip;</div>';
+
+}
+
+
+
+function GenerateError() {
+
+    EmptySection();
+
+    document.getElementById('form').hidden = false;
+
+    let html = `
+
+    <div class="row">
+
+    <div class="col-md-12 text-center">Codice identificativo errato.</div>
+
+  </div>
+
+  `
+
+    document.getElementById('data').innerHTML += html;
+
+}
+
+
+
+function RetrieveDataFromDB() {
+
+    EmptySection();
+
+    document.getElementById('form').hidden = false;
+
+    document.getElementById('submitForm').hidden = true;
+
+    GenerateTablePart(false);
+
+    firebase.database().ref('conferme').once('value').then(function (snapshot) {
+
+        console.log(snapshot.val());
+
+        let valList = snapshot.val();
+
+        for (const code in valList) {
+
+            console.log(valList[code]);
+
+            for (const member in valList[code]) {
+
+                console.log(valList[code][member]);
+
+                GenerateReadRow(valList[code][member]);
+
+            }
+
+        }
+
+        GenerateTablePart(true);
+
+    });
+
+}
+
+
+
+function GenerateTablePart(end) {
+
+    let html = '';
+
+    if (!end) {
+
+        html = `<table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th scope="col">code</th>
+
+          <th scope="col">Nome</th>
+
+          <th scope="col">Partecipa</th>
+
+          <th scope="col">Vegetariano</th>
+
+          <th scope="col">Note</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>`;
+
+    } else if (end) {
+
+        html = `  </tbody>
+
+      </table>`
+
+    }
+
+    document.getElementById('data').innerHTML += html;
+
+}
+
+
+
+function GenerateReadRow(obj) {
+
+    if (!obj)
+
+        return;
+
+    const familyCode = obj.codice;
+
+    const intoll = obj.intolleranze;
+
+    const bimbo = obj.menu_vegetariano;
+
+    const membName = obj.nome;
+
+    const partec = obj.partecipa;
+
+    let html = `<tr>
+
+  <th scope="row">` + familyCode + `</th>
+
+  <td>` + membName + `</td>
+
+  <td>` + partec + `</td>
+
+  <td>` + bimbo + `</td>
+
+  <td>` + intoll + `</td>
+
+</tr>`
+
+    document.getElementsByTagName('tbody')[0].innerHTML += html;
+
+}
+</script>
+<script>
+(function(){
+
+    var ua = navigator.userAgent,
+
+    isMobileWebkit = /WebKit/.test(ua) && /Mobile/.test(ua);
+
+
+
+    if (isMobileWebkit) {
+
+        $('html').addClass('mobile');
+
+      }
+
+
+
+      var iScrollInstance;
+
+      if (isMobileWebkit) {
+
+        iScrollInstance = new iScroll('scroller');
+
+      }
+
+  })();
+
+
+
+function verificaEmail(email) {
+
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+    return re.test(email);
+
+}
+
+
+
+function controlloForm() {
+
+    var nome = document.forms["formmail"]["nome"].value;
+
+    var email = document.forms["formmail"]["email"].value;
+
+    var tel = document.forms["formmail"]["tel"].value;
+
+    var msg = document.forms["formmail"]["msg"].value;
+
+
+
+    if (nome == "" || email == "" || msg == "") {
+
+        alert("I campi Nome, Email e Messaggio sono obbligatori!");
+
+    } else if (verificaEmail(email) !== true) {
+
+        alert("L'indirizzo email non sembra corretto!");
+
+    } else {
+
+        sendMessage(msg);
+
+    }
+
+}
+
+
+
+function sendMessage(n, e, t, m) {
+
+    console.log(firebase);
+
+    console.log(firebase.database());
+
+    console.log(firebase.database().ref('messaggi'));
+
+    firebase.database()
+
+        .ref('messaggi')
+
+        .put({
+
+            'nome': n,
+
+            'email': e,
+
+            'tel': t,
+
+            'msg': m
+
+        });
+
+}
+</script>
+<script>
+	FirebaseInit();
+</script>
+    
+<!-- Analytics -->
+ 
+<!-- Analytics END -->
+    
+</head>
+<body>
+<!-- Main container -->
+<div class="page-container">
+    
+<!-- menu -->
+<div class="bloc sticky-nav bgc-upsdell-red d-bloc" id="menu">
+	<div class="container bloc-sm">
+		<div class="row">
+			<div class="col">
+				<nav class="navbar navbar-light row navbar-expand-md" role="navigation">
+					<a class="navbar-brand" href="index.html">Wedding</a>
+					<button id="nav-toggle" type="button" class="ml-auto ui-navbar-toggler navbar-toggler border-0 p-0" data-toggle="collapse" data-target=".navbar-44472" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse navbar-44472">
+						<ul class="site-navigation nav navbar-nav ml-auto">
+							<li class="nav-item">
+								<a href="index.html" class="nav-link">Home</a>
+							</li>
+							<li class="nav-item">
+								<a href="#noi" class="nav-link a-btn">Noi</a>
+							</li>
+							<li class="nav-item">
+								<a href="#rito" class="nav-link a-btn">IL Rito</a>
+							</li>
+							<li class="nav-item">
+								<a href="#ricevimento" class="nav-link a-btn">Ricevimento</a>
+							</li>
+							<li class="nav-item">
+								<a href="#regalo" class="nav-link a-btn">Regalo</a>
+							</li>
+							<li class="nav-item">
+								<a href="#conferma" class="nav-link a-btn">Conferma presenza</a>
+							</li>
+							<li class="nav-item">
+								<a href="#contattaci" class="nav-link a-btn">Contattaci</a>
+							</li>
+						</ul>
+					</div>
+				</nav>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- menu END -->
+
+<!-- ScrollToTop Button -->
+<a class="bloc-button btn btn-d scrollToTop" onclick="scrollToTarget('1',this)"><span class="fa fa-chevron-up"></span></a>
+<!-- ScrollToTop Button END-->
+
+
+<!-- home -->
+<div class="bloc none bloc-fill-screen tc-white bg-klimt l-bloc b-parallax bloc-bg-texture texture-fabric" id="home">
+	<div class="container">
+		<div class="row">
+			<div class="col-12 order-lg-1 col-lg-8 offset-lg-2 darker">
+				<h1 class="text-lg-center sm-shadow mx-auto d-block mg-clear h1-style">
+					Riccardo &amp; Giulia<br>
+				</h1>
+				<h4 class="mg-md text-lg-center tc-white">
+					Il nostro matrimonio!<br>
+				</h4>
+				<h1 class="text-lg-center animated tada-hvr mg-lg">
+					15/05/2021<br>
+				</h1>
+				<div class="text-center">
+					<a href="#" class="btn btn-d btn-block btn-lg" data-scroll-speed="1000" onclick="scrollToTarget('#conferma',this)">Conferma Presenza</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- home END -->
+
+<!-- noi -->
+<div class="bloc full-width-bloc " id="noi">
+	<div class="container bloc-xxl b-divider">
+		<div class="row">
+			<div class="col">
+				<h1 class="mg-md text-center tc-vegas-gold">
+					Noi<br>
+				</h1>
+				<h5 class="text-center">
+					"La cosa piú grande che tu possa imparare è amare e lasciarti amare” (- Moulin Rouge -)<br>
+				</h5>
+			</div>
+		</div>
+		<div class="row voffset">
+			<div class="col-md-6 mt-1 mt-md-0 col-lg-5 offset-lg-1">
+				<a href="#" data-lightbox="img/mountains.jpg" data-gallery-id="gallery-1" data-frame="light-lb"><img src="img/lazyload-ph.png" data-src="img/mountains.jpg" class="img-fluid mx-auto d-block img-frame-md lazyload" alt="placeholder image-sq" /></a>
+			</div>
+			<div class="col-md-6 mt-1 mt-md-4 mt-lg-0 col-lg-5">
+				<a href="#" data-lightbox="img/desk-equipment.jpg" data-gallery-id="gallery-1" data-frame="light-lb"><img src="img/lazyload-ph.png" data-src="img/desk-equipment.jpg" class="img-fluid mx-auto d-block img-frame-md lazyload" alt="placeholder image-sq" /></a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- noi END -->
+
+<!-- rito -->
+<div class="bloc full-width-bloc bloc-fill-screen" id="rito">
+	<div class="container">
+		<div class="row align-items-center">
+			<div class="align-self-center offset-md-1 col-md-10 col-sm-10 offset-sm-1 col-10 offset-1 col-lg-4 offset-lg-1">
+				<h2 class="mg-md tc-vegas-gold">
+					Il Rito
+				</h2>
+				<h3 class="mg-md">
+					Civile is the way! :)
+				</h3>
+				<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.<br>
+				</p>
+			</div>
+			<div class="order-md-0 col-md-12 order-lg-1 align-self-center offset-lg-0 col-lg-6">
+				<img src="img/lazyload-ph.png" data-src="img/maxresdefault.jpg" class="img-fluid mx-auto d-block lazyload" alt="maxresdefault" />
+			</div>
+		</div>
+	</div>
+</div>
+<!-- rito END -->
+
+<!-- ricevimento -->
+<div class="bloc bloc-bg-texture texture-darken b-parallax bloc-fill-screen bg-f98c7233d88b6657bde9245729baf40c d-bloc" id="ricevimento">
+	<div class="container">
+		<div class="row">
+			<div class="col-12 col-11 col-lg-8 offset-lg-2">
+				<h2 class="mg-md mx-auto d-block text-lg-center tc-vegas-gold">
+					Ricevimento<br>
+				</h2>
+				<h3 class="mg-md text-center ">
+					<i>"Good design is making something intelligible and memorable. Great design is making something memorable and meaningful."</i><br>
+				</h3>
+				<h4 class="mg-md text-center ">
+					<strong>Dieter Rams</strong><br>
+				</h4>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- ricevimento END -->
+
+<!-- regalo -->
+<div class="bloc none bloc-fill-screen full-width-bloc" id="regalo">
+	<div class="container">
+		<div class="row align-items-center">
+			<div class="order-md-0 col-md-12 align-self-center order-lg-1 offset-lg-0 col-lg-6">
+				<img src="img/lazyload-ph.png" data-src="img/ea84cd98ec8b25d2725f7538a7639cd5.gif" class="img-fluid mx-auto d-block lazyload" alt="apple watch" />
+			</div>
+			<div class="align-self-center offset-md-1 col-md-10 col-sm-10 offset-sm-1 col-10 offset-1 col-lg-4 offset-lg-1">
+				<h2 class="mg-md tc-vegas-gold">
+					Il Regalo<br>
+				</h2>
+				<h3 class="mg-md">
+					Venalissimo denaro! 😎<br>
+				</h3>
+				<p>
+					Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim.
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- regalo END -->
+
+<!-- conferma -->
+<div class="bloc full-width-bloc b-divider l-bloc" id="conferma">
+	<div class="container bloc-lg">
+		<div class="row">
+			<div class="col-sm-10 offset-sm-1 col-md-8 offset-md-2 align-self-center offset-lg-1 col-lg-10">
+				<div >
+					<div class="container">
+					<div class="row">
+						<div class="col-md-12">
+							<h1>Conferma presenza</h1>
+							<div id="conferma">
+								<h5 class="sue">Invia la tua risposta entro il <u>15 Aprile 2021</u>!</h5>
+								<h4 class="my-3">1) Inserisci il tuo codice identificativo e clicca su "Log-in"</h4>
+								<div class="row">
+									<div class="col-md-9 mb-3">
+									<label for="code">Codice identificativo</label>
+									<input type="text" class="form-control" id="code" placeholder="" value="" required="">
+									<div class="invalid-feedback">
+										Il codice identificativo è obbligatorio.
+									</div>
+									</div>
+									<a id="submitForm" class="col-md-3 my-3 btn btn-outline-secondary btn-lg btn-block bloc-button" onclick="login()">Log-in</a>
+								</div>
+								<hr class="mb-4">
+								<div id="form" hidden="">
+									<h4 class="my-3">2) Indica per ciascun ospite le informazioni richieste:</h4>
+									<div id="data-header" class="row">
+									<div class="col-md-3 text-center"></div>
+									<div class="col-md-3 text-center">Ci sarò!</div>
+									<div class="col-md-3 text-center">Vegetariano</div>
+									<div class="col-md-3 text-center">Note<sup>*</sup></div>
+									</div>
+									<div id="data"></div>
+									<hr class="mb-4">
+									<a id="submitForm" class="btn btn-outline-secondary btn-lg btn-block bloc-button" data-toggle="modal" data-target="#exampleModal" onclick="partecipo()">Invia la tua risposta!</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- conferma END -->
+
+<!-- contattaci -->
+<div class="bloc l-bloc" id="contattaci">
+	<div class="container bloc-lg">
+		<div class="row">
+			<div class="col-lg-6 offset-lg-3 offset-md-2 col-md-8">
+				<form id="form_9679" data-form-type="blocs-form" novalidate data-success-msg="Abbiamo ricevuto il tuo messaggio, ti risponderemo al più presto!" data-fail-msg="Mi spiace non riusciamo a ricevere il tuo messaggio, prova a contattarci alla vecchia maniere, CHIAMACI!">
+					<div class="form-group">
+						<label>
+							Nome e Cognome<br>
+						</label>
+						<input id="name_9679" class="form-control" required />
+					</div>
+					<div class="form-group">
+						<label>
+							Email
+						</label>
+						<input id="email_9679" class="form-control" type="email" required />
+					</div>
+					<div class="form-group">
+						<label>
+							Telefono
+						</label>
+						<input id="tel_9679" class="form-control" type="email" required />
+					</div>
+					<div class="form-group">
+						<label>
+							Messaggio<br>
+						</label><textarea id="message_9679" class="form-control" rows="4" cols="50" required></textarea>
+					</div> 
+					<button class="bloc-button btn btn-d btn-lg btn-block" type="submit">
+						Invia
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- contattaci END -->
+
+<!-- footer -->
+<div class="bloc bgc-upsdell-red d-bloc" id="footer">
+	<div class="container bloc-sm">
+		<div class="row">
+			<div class="col-12 col-sm-4 col-lg-6">
+				<div >
+					<div class="blockquote">
+	<p>
+		Made by GliSposi with <span style="color:red;">♥<br>
+	</span></p>
+</div>
+					
+				</div>
+			</div>
+			<div class="col-12 col-sm-4 col-lg-6">
+					<div class="blockquote text-right">
+						<p>
+							© 2020 Copyright:&nbsp;<a href="https://www.linkedin.com/in/riccardogiordano/">Riccardo Giordano</a>
+						</p>
+					</div>
+				</div>
+		</div>
+	</div>
+</div>
+<!-- footer END -->
+
+</div>
+<!-- Main container END -->
+    
+
+<script src="./js/jquery-3.5.1.min.js"></script>
+<script src="./js/bootstrap.bundle.min.js"></script>
+<script src="./js/blocs.js"></script>
+<script src="./js/jqBootstrapValidation.js"></script>
+<script src="./js/formHandler.js"></script>
+<script src="./js/jquery.touchSwipe.min.js" defer></script>
+<script src="./js/lazysizes.min.js" defer></script>
+<!-- Additional JS END -->
+
+
+
+<!-- Preloader -->
+<div id="page-loading-blocs-notifaction" class="page-preloader"></div>
+<!-- Preloader END -->
+
+</body>
+</html>
