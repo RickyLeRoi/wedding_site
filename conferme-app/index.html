@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./css/conferme-style.css" />
+    <link rel="stylesheet" href="./css/conferme-checkbox.css" />
+    <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-database.js"></script>
+    <script src="./js/firebase-init.js"></script>
+  </head>
+  <body>
+    <h1 class="mg-md text-lg-center tc-vegas-gold text-md-center text-sm-center text-center force-gold">Conferma Presenza</h1>
+    <p class="text-center p-bloc-5-style dark">Sarà possibile confermare la presenza fino a giorno 01/10/2021</p>
+    <form class="contact-form-code dark">
+      <p class="p-bloc-5-style">Codice: </p>
+      <input id="family-code" class="field code" type="text" placeholder="codice" /><br />
+      <button class='submit submit-code' type="submit">Invia</button>
+    </form>
+    <script src="./js/conferme-app.js"></script>
+
+    <h1 class="mg-md text-lg-center tc-vegas-gold text-md-center text-sm-center text-center force-gold">Lascia un Messaggio</h1>
+    <p class="text-center p-bloc-5-style dark">Vuoi inviarci un messaggio, un consiglio o un pensiero?</p>
+    <form class="contact-form-message dark">
+      <p class="p-bloc-5-style">Nome Completo: </p>
+      <input id="person-nome" class="field nome" type="text" placeholder="nome..." /><br />
+      <p class="p-bloc-5-style">Messaggio: </p>
+      <input id="person-message" class="field messaggio" type="text" placeholder="scrivi qui..." /><br />
+      <button class='submit submit-message' type="submit">Invia</button>
+    </form>
+    <script src="./js/messaggi-app.js"></script>
+  </body>
+</html>
